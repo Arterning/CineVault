@@ -1,0 +1,125 @@
+<?php
+
+namespace app\model;
+
+use support\Database;
+use PDO;
+
+class Movie
+{
+    /**
+     * 根据ID查找电影
+     */
+    public static function find(int $id): ?array
+    {
+        $stmt = Database::connection()->prepare('SELECT * FROM movies WHERE id = ?');
+        $stmt->execute([$id]);
+        $movie = $stmt->fetch();
+        return $movie ?: null;
+    }
+
+    /**
+     * 获取用户的所有电影
+     */
+    public static function findByUserId(int $userId, int $page = 1, int $perPage = 20): array
+    {
+        $offset = ($page - 1) * $perPage;
+
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM movies WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+        );
+        $stmt->execute([$userId, $perPage, $offset]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * 获取用户电影总数
+     */
+    public static function countByUserId(int $userId): int
+    {
+        $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM movies WHERE user_id = ?');
+        $stmt->execute([$userId]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /**
+     * 搜索电影
+     */
+    public static function search(int $userId, string $keyword): array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM movies
+             WHERE user_id = ? AND (title LIKE ? OR description LIKE ?)
+             ORDER BY created_at DESC'
+        );
+
+        $searchTerm = '%' . $keyword . '%';
+        $stmt->execute([$userId, $searchTerm, $searchTerm]);
+
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * 创建电影
+     */
+    public static function create(array $data): int
+    {
+        $stmt = Database::connection()->prepare(
+            'INSERT INTO movies (user_id, title, url, description, poster_url, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, datetime("now"), datetime("now"))'
+        );
+
+        $stmt->execute([
+            $data['user_id'],
+            $data['title'],
+            $data['url'],
+            $data['description'] ?? null,
+            $data['poster_url'] ?? null
+        ]);
+
+        return (int) Database::connection()->lastInsertId();
+    }
+
+    /**
+     * 更新电影
+     */
+    public static function update(int $id, array $data): bool
+    {
+        $fields = [];
+        $values = [];
+
+        foreach ($data as $key => $value) {
+            if (in_array($key, ['title', 'url', 'description', 'poster_url'])) {
+                $fields[] = "$key = ?";
+                $values[] = $value;
+            }
+        }
+
+        $fields[] = "updated_at = datetime('now')";
+        $values[] = $id;
+
+        $sql = 'UPDATE movies SET ' . implode(', ', $fields) . ' WHERE id = ?';
+        $stmt = Database::connection()->prepare($sql);
+        return $stmt->execute($values);
+    }
+
+    /**
+     * 删除电影
+     */
+    public static function delete(int $id, int $userId): bool
+    {
+        $stmt = Database::connection()->prepare('DELETE FROM movies WHERE id = ? AND user_id = ?');
+        return $stmt->execute([$id, $userId]);
+    }
+
+    /**
+     * 检查电影是否属于用户
+     */
+    public static function belongsToUser(int $id, int $userId): bool
+    {
+        $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM movies WHERE id = ? AND user_id = ?');
+        $stmt->execute([$id, $userId]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+}

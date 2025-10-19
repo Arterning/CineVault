@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑电影 - 电影收藏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0e27',
+                        'dark-card': '#1a1f3a',
+                        'dark-border': '#2a2f4a',
+                        'primary': '#00d9ff',
+                        'primary-dark': '#00b8d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            min-height: 100vh;
+        }
+        .glow {
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.3),
+                        0 0 20px rgba(0, 217, 255, 0.2);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #00d9ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Header -->
+    <nav class="bg-dark-card border-b border-dark-border glow mb-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/movies" class="text-2xl font-bold text-gradient">CineVault</a>
+                <a href="/movies" class="text-gray-300 hover:text-primary transition">
+                    返回列表
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div class="bg-dark-card rounded-lg shadow-2xl glow p-8 border border-dark-border">
+            <h2 class="text-3xl font-bold text-white mb-6">编辑电影</h2>
+
+            <!-- Movie Form -->
+            <form id="movieForm" class="space-y-6">
+                <div>
+                    <label for="url" class="block text-sm font-medium text-gray-300 mb-2">
+                        电影URL <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                        type="url"
+                        id="url"
+                        name="url"
+                        required
+                        value="<?php echo htmlspecialchars($movie['url'] ?? ''); ?>"
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg
+                               text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                               focus:ring-2 focus:ring-primary/50 transition"
+                        placeholder="https://example.com/movie/..."
+                    >
+                </div>
+
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-300 mb-2">
+                        电影名称 <span class="text-red-400">*</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        required
+                        value="<?php echo htmlspecialchars($movie['title'] ?? ''); ?>"
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg
+                               text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                               focus:ring-2 focus:ring-primary/50 transition"
+                        placeholder="电影名称"
+                    >
+                </div>
+
+                <div>
+                    <label for="description" class="block text-sm font-medium text-gray-300 mb-2">
+                        电影介绍
+                    </label>
+                    <textarea
+                        id="description"
+                        name="description"
+                        rows="4"
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg
+                               text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                               focus:ring-2 focus:ring-primary/50 transition resize-none"
+                        placeholder="电影简介、剧情描述等..."
+                    ><?php echo htmlspecialchars($movie['description'] ?? ''); ?></textarea>
+                </div>
+
+                <div>
+                    <label for="poster_url" class="block text-sm font-medium text-gray-300 mb-2">
+                        海报URL（可选）
+                    </label>
+                    <input
+                        type="url"
+                        id="poster_url"
+                        name="poster_url"
+                        value="<?php echo htmlspecialchars($movie['poster_url'] ?? ''); ?>"
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg
+                               text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                               focus:ring-2 focus:ring-primary/50 transition"
+                        placeholder="https://example.com/poster.jpg"
+                    >
+                    <?php if (!empty($movie['poster_url'])): ?>
+                        <div id="posterPreview" class="mt-4">
+                            <img id="posterImg" src="<?php echo htmlspecialchars($movie['poster_url']); ?>"
+                                 class="max-w-xs rounded-lg border border-dark-border" alt="海报预览">
+                        </div>
+                    <?php else: ?>
+                        <div id="posterPreview" class="mt-4 hidden">
+                            <img id="posterImg" class="max-w-xs rounded-lg border border-dark-border" alt="海报预览">
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+                <div id="errorMessage" class="hidden bg-red-900/30 border border-red-500 text-red-200 px-4 py-3 rounded-lg">
+                </div>
+
+                <div class="flex gap-4">
+                    <button
+                        type="submit"
+                        class="flex-1 bg-gradient-to-r from-primary to-primary-dark text-dark-bg
+                               font-bold py-3 px-6 rounded-lg hover:opacity-90 transition
+                               transform hover:scale-105 glow">
+                        保存更改
+                    </button>
+                    <a href="/movies"
+                       class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-center
+                              font-bold py-3 px-6 rounded-lg transition">
+                        取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Poster preview
+        document.getElementById('poster_url').addEventListener('input', (e) => {
+            const url = e.target.value.trim();
+            if (url) {
+                showPosterPreview(url);
+            } else {
+                document.getElementById('posterPreview').classList.add('hidden');
+            }
+        });
+
+        function showPosterPreview(url) {
+            const preview = document.getElementById('posterPreview');
+            const img = document.getElementById('posterImg');
+            img.src = url;
+            img.onerror = () => preview.classList.add('hidden');
+            preview.classList.remove('hidden');
+        }
+
+        // Submit form
+        document.getElementById('movieForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.classList.add('hidden');
+
+            const formData = new FormData(e.target);
+            const button = e.target.querySelector('button[type="submit"]');
+            const originalText = button.textContent;
+            button.textContent = '保存中...';
+            button.disabled = true;
+
+            try {
+                const movieId = <?php echo $movie['id']; ?>;
+                const response = await fetch(`/movies/${movieId}/update`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    window.location.href = result.redirect;
+                } else {
+                    errorDiv.textContent = result.message;
+                    errorDiv.classList.remove('hidden');
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            } catch (error) {
+                errorDiv.textContent = '网络错误，请稍后重试';
+                errorDiv.classList.remove('hidden');
+                button.textContent = originalText;
+                button.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<?php
+
+namespace app\controller;
+
+use support\Request;
+use support\Response;
+use app\model\Movie;
+use support\MovieParser;
+
+class MovieController
+{
+    /**
+     * 电影列表页面
+     */
+    public function index(Request $request): Response
+    {
+        $userId = $request->session()->get('user_id');
+        $page = max(1, (int) $request->get('page', 1));
+        $search = $request->get('search', '');
+
+        if ($search) {
+            $movies = Movie::search($userId, $search);
+            $total = count($movies);
+        } else {
+            $movies = Movie::findByUserId($userId, $page, 20);
+            $total = Movie::countByUserId($userId);
+        }
+
+        $totalPages = ceil($total / 20);
+
+        return view('movies/index', [
+            'movies' => $movies,
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total,
+            'search' => $search
+        ]);
+    }
+
+    /**
+     * 添加电影页面
+     */
+    public function create(Request $request): Response
+    {
+        return view('movies/create');
+    }
+
+    /**
+     * 解析URL获取电影信息
+     */
+    public function parseUrl(Request $request): Response
+    {
+        $url = $request->post('url');
+
+        if (!$url) {
+            return json([
+                'success' => false,
+                'message' => 'URL不能为空'
+            ]);
+        }
+
+        // 验证URL格式
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return json([
+                'success' => false,
+                'message' => 'URL格式不正确'
+            ]);
+        }
+
+        // 解析URL获取电影信息
+        $result = MovieParser::parse($url);
+
+        if ($result['success']) {
+            return json([
+                'success' => true,
+                'data' => [
+                    'title' => $result['title'],
+                    'description' => $result['description'],
+                    'poster_url' => $result['poster_url']
+                ]
+            ]);
+        } else {
+            return json([
+                'success' => false,
+                'message' => '无法从URL获取电影信息，请手动填写'
+            ]);
+        }
+    }
+
+    /**
+     * 保存电影
+     */
+    public function store(Request $request): Response
+    {
+        $userId = $request->session()->get('user_id');
+        $title = trim($request->post('title', ''));
+        $url = trim($request->post('url', ''));
+        $description = trim($request->post('description', ''));
+        $posterUrl = trim($request->post('poster_url', ''));
+
+        // 验证必填字段
+        if (!$title || !$url) {
+            return json([
+                'success' => false,
+                'message' => '电影名称和URL不能为空'
+            ]);
+        }
+
+        // 验证URL格式
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return json([
+                'success' => false,
+                'message' => 'URL格式不正确'
+            ]);
+        }
+
+        try {
+            $movieId = Movie::create([
+                'user_id' => $userId,
+                'title' => $title,
+                'url' => $url,
+                'description' => $description,
+                'poster_url' => $posterUrl
+            ]);
+
+            return json([
+                'success' => true,
+                'message' => '电影添加成功',
+                'redirect' => '/movies'
+            ]);
+        } catch (\Exception $e) {
+            return json([
+                'success' => false,
+                'message' => '添加失败，请稍后重试'
+            ]);
+        }
+    }
+
+    /**
+     * 编辑电影页面
+     */
+    public function edit(Request $request, $id): Response
+    {
+        $userId = $request->session()->get('user_id');
+        $movie = Movie::find($id);
+
+        if (!$movie || !Movie::belongsToUser($id, $userId)) {
+            return view('errors/404');
+        }
+
+        return view('movies/edit', ['movie' => $movie]);
+    }
+
+    /**
+     * 更新电影
+     */
+    public function update(Request $request, $id): Response
+    {
+        $userId = $request->session()->get('user_id');
+
+        if (!Movie::belongsToUser($id, $userId)) {
+            return json([
+                'success' => false,
+                'message' => '无权操作此电影'
+            ]);
+        }
+
+        $title = trim($request->post('title', ''));
+        $url = trim($request->post('url', ''));
+        $description = trim($request->post('description', ''));
+        $posterUrl = trim($request->post('poster_url', ''));
+
+        // 验证必填字段
+        if (!$title || !$url) {
+            return json([
+                'success' => false,
+                'message' => '电影名称和URL不能为空'
+            ]);
+        }
+
+        // 验证URL格式
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return json([
+                'success' => false,
+                'message' => 'URL格式不正确'
+            ]);
+        }
+
+        try {
+            Movie::update($id, [
+                'title' => $title,
+                'url' => $url,
+                'description' => $description,
+                'poster_url' => $posterUrl
+            ]);
+
+            return json([
+                'success' => true,
+                'message' => '更新成功',
+                'redirect' => '/movies'
+            ]);
+        } catch (\Exception $e) {
+            return json([
+                'success' => false,
+                'message' => '更新失败，请稍后重试'
+            ]);
+        }
+    }
+
+    /**
+     * 删除电影
+     */
+    public function delete(Request $request, $id): Response
+    {
+        $userId = $request->session()->get('user_id');
+
+        if (!Movie::belongsToUser($id, $userId)) {
+            return json([
+                'success' => false,
+                'message' => '无权操作此电影'
+            ]);
+        }
+
+        try {
+            Movie::delete($id, $userId);
+
+            return json([
+                'success' => true,
+                'message' => '删除成功'
+            ]);
+        } catch (\Exception $e) {
+            return json([
+                'success' => false,
+                'message' => '删除失败，请稍后重试'
+            ]);
+        }
+    }
+}

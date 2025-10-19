@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $title ?? '电影收藏系统'; ?></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0e27',
+                        'dark-card': '#1a1f3a',
+                        'dark-border': '#2a2f4a',
+                        'primary': '#00d9ff',
+                        'primary-dark': '#00b8d4',
+                        'secondary': '#7c3aed',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            min-height: 100vh;
+        }
+
+        .glow {
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.3),
+                        0 0 20px rgba(0, 217, 255, 0.2),
+                        0 0 30px rgba(0, 217, 255, 0.1);
+        }
+
+        .glow-hover:hover {
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.5),
+                        0 0 30px rgba(0, 217, 255, 0.3),
+                        0 0 45px rgba(0, 217, 255, 0.2);
+        }
+
+        .cyber-border {
+            position: relative;
+            border: 2px solid #00d9ff;
+            background: linear-gradient(135deg, rgba(26, 31, 58, 0.9) 0%, rgba(10, 14, 39, 0.9) 100%);
+        }
+
+        .cyber-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #00d9ff, #7c3aed, #00d9ff);
+            border-radius: inherit;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .cyber-border:hover::before {
+            opacity: 0.3;
+        }
+
+        .text-gradient {
+            background: linear-gradient(135deg, #00d9ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <?php echo $content; ?>
+</body>
+</html>

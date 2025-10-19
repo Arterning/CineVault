@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的电影 - 电影收藏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0e27',
+                        'dark-card': '#1a1f3a',
+                        'dark-border': '#2a2f4a',
+                        'primary': '#00d9ff',
+                        'primary-dark': '#00b8d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            min-height: 100vh;
+        }
+        .glow {
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.3),
+                        0 0 20px rgba(0, 217, 255, 0.2);
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.5),
+                        0 0 30px rgba(0, 217, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #00d9ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Header -->
+    <nav class="bg-dark-card border-b border-dark-border glow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gradient">CineVault</h1>
+                    <span class="ml-4 text-gray-400">欢迎，<?php echo htmlspecialchars($_SESSION['username'] ?? 'User'); ?></span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/logout" class="text-gray-300 hover:text-primary transition">
+                        退出登录
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Search and Add -->
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <form method="GET" class="w-full sm:w-96">
+                <div class="relative">
+                    <input
+                        type="text"
+                        name="search"
+                        value="<?php echo htmlspecialchars($search ?? ''); ?>"
+                        placeholder="搜索电影..."
+                        class="w-full px-4 py-3 pl-10 bg-dark-card border border-dark-border rounded-lg
+                               text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                               focus:ring-2 focus:ring-primary/50 transition"
+                    >
+                    <svg class="absolute left-3 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </div>
+            </form>
+
+            <a href="/movies/create"
+               class="bg-gradient-to-r from-primary to-primary-dark text-dark-bg
+                      font-bold py-3 px-6 rounded-lg hover:opacity-90 transition
+                      transform hover:scale-105 glow whitespace-nowrap">
+                + 添加电影
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="mb-6">
+            <p class="text-gray-400">共 <span class="text-primary font-bold"><?php echo $total; ?></span> 部电影</p>
+        </div>
+
+        <!-- Movie Grid -->
+        <?php if (empty($movies)): ?>
+            <div class="text-center py-20">
+                <div class="text-6xl mb-4">🎬</div>
+                <h3 class="text-2xl font-bold text-gray-300 mb-2">还没有收藏电影</h3>
+                <p class="text-gray-500 mb-6">点击上方按钮开始添加您喜欢的电影吧！</p>
+                <a href="/movies/create" class="inline-block bg-gradient-to-r from-primary to-primary-dark text-dark-bg
+                   font-bold py-3 px-6 rounded-lg hover:opacity-90 transition">
+                    立即添加
+                </a>
+            </div>
+        <?php else: ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <?php foreach ($movies as $movie): ?>
+                    <div class="bg-dark-card rounded-lg overflow-hidden border border-dark-border glow-hover transition-all duration-300">
+                        <?php if (!empty($movie['poster_url'])): ?>
+                            <div class="aspect-[2/3] bg-dark-bg overflow-hidden">
+                                <img src="<?php echo htmlspecialchars($movie['poster_url']); ?>"
+                                     alt="<?php echo htmlspecialchars($movie['title']); ?>"
+                                     class="w-full h-full object-cover"
+                                     onerror="this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-6xl\'>🎬</div>'">
+                            </div>
+                        <?php else: ?>
+                            <div class="aspect-[2/3] bg-dark-bg flex items-center justify-center text-6xl">
+                                🎬
+                            </div>
+                        <?php endif; ?>
+
+                        <div class="p-4">
+                            <h3 class="text-lg font-bold text-white mb-2 truncate" title="<?php echo htmlspecialchars($movie['title']); ?>">
+                                <?php echo htmlspecialchars($movie['title']); ?>
+                            </h3>
+
+                            <?php if (!empty($movie['description'])): ?>
+                                <p class="text-gray-400 text-sm mb-3 line-clamp-2">
+                                    <?php echo htmlspecialchars(mb_substr($movie['description'], 0, 100)); ?>
+                                    <?php echo mb_strlen($movie['description']) > 100 ? '...' : ''; ?>
+                                </p>
+                            <?php endif; ?>
+
+                            <div class="flex gap-2">
+                                <a href="<?php echo htmlspecialchars($movie['url']); ?>"
+                                   target="_blank"
+                                   class="flex-1 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/50
+                                          py-2 px-3 rounded text-center text-sm font-medium transition">
+                                    播放
+                                </a>
+                                <a href="/movies/<?php echo $movie['id']; ?>/edit"
+                                   class="flex-1 bg-gray-700 hover:bg-gray-600 text-white
+                                          py-2 px-3 rounded text-center text-sm font-medium transition">
+                                    编辑
+                                </a>
+                                <button onclick="deleteMovie(<?php echo $movie['id']; ?>)"
+                                        class="bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-700
+                                               py-2 px-3 rounded text-sm font-medium transition">
+                                    删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <!-- Pagination -->
+            <?php if ($totalPages > 1): ?>
+                <div class="flex justify-center mt-8 gap-2">
+                    <?php if ($page > 1): ?>
+                        <a href="?page=<?php echo $page - 1; ?><?php echo $search ? '&search=' . urlencode($search) : ''; ?>"
+                           class="px-4 py-2 bg-dark-card border border-dark-border rounded hover:border-primary transition">
+                            上一页
+                        </a>
+                    <?php endif; ?>
+
+                    <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+                        <a href="?page=<?php echo $i; ?><?php echo $search ? '&search=' . urlencode($search) : ''; ?>"
+                           class="px-4 py-2 rounded <?php echo $i === $page ? 'bg-primary text-dark-bg font-bold' : 'bg-dark-card border border-dark-border hover:border-primary'; ?> transition">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+
+                    <?php if ($page < $totalPages): ?>
+                        <a href="?page=<?php echo $page + 1; ?><?php echo $search ? '&search=' . urlencode($search) : ''; ?>"
+                           class="px-4 py-2 bg-dark-card border border-dark-border rounded hover:border-primary transition">
+                            下一页
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+
+    <script>
+        async function deleteMovie(id) {
+            if (!confirm('确定要删除这部电影吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/movies/${id}/delete`, {
+                    method: 'POST'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('删除失败，请稍后重试');
+            }
+        }
+
+        // Auto-submit search form on input
+        const searchInput = document.querySelector('input[name="search"]');
+        let searchTimeout;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                e.target.form.submit();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
