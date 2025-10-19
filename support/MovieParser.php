@@ -45,7 +45,9 @@ class MovieParser
                     'error' => $error['message'] ?? 'Unknown error',
                     'url' => $url
                 ]);
-                return $result;
+                // 主解析失败，尝试使用OpenGraph API
+                Log::info('MovieParser: 尝试使用OpenGraph API备用解析');
+                return self::parseWithOpenGraphApi($url);
             }
 
             Log::info('MovieParser: 成功获取网页内容', [
@@ -82,8 +84,97 @@ class MovieParser
 
             Log::info('MovieParser: 解析完成', ['result' => $result]);
 
+            // 如果主解析失败（没有获取到标题），尝试使用OpenGraph API
+            if (!$result['success']) {
+                Log::info('MovieParser: 主解析未获取到有效数据，尝试使用OpenGraph API备用解析');
+                return self::parseWithOpenGraphApi($url);
+            }
+
         } catch (\Exception $e) {
             Log::error('MovieParser: 解析异常', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // 异常时尝试使用OpenGraph API
+            Log::info('MovieParser: 解析异常，尝试使用OpenGraph API备用解析');
+            return self::parseWithOpenGraphApi($url);
+        }
+
+        return $result;
+    }
+
+    /**
+     * 使用OpenGraph API解析URL
+     */
+    private static function parseWithOpenGraphApi(string $url): array
+    {
+        $result = [
+            'success' => false,
+            'title' => '',
+            'description' => '',
+            'poster_url' => ''
+        ];
+
+        try {
+            $apiUrl = 'http://localhost:8007/opengraph?url=' . urlencode($url) . '&proxy=http://127.0.0.1:7890';
+            Log::info('MovieParser: 调用OpenGraph API', ['api_url' => $apiUrl]);
+
+            $contextOptions = [
+                'http' => [
+                    'timeout' => 15,
+                    'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                ],
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false
+                ]
+            ];
+
+            $context = stream_context_create($contextOptions);
+            $response = @file_get_contents($apiUrl, false, $context);
+
+            if ($response === false) {
+                $error = error_get_last();
+                Log::error('MovieParser: OpenGraph API调用失败', [
+                    'error' => $error['message'] ?? 'Unknown error',
+                    'api_url' => $apiUrl
+                ]);
+                return $result;
+            }
+
+            $data = json_decode($response, true);
+            Log::info('MovieParser: OpenGraph API响应', ['data' => $data]);
+
+            if (!$data || !isset($data['success']) || !$data['success']) {
+                Log::warning('MovieParser: OpenGraph API返回失败', ['response' => $response]);
+                return $result;
+            }
+
+            $ogData = $data['data'] ?? [];
+
+            // 提取标题
+            $title = $ogData['title'] ?? $ogData['twitter:title'] ?? $ogData['twitterTitle'] ?? '';
+            if ($title) {
+                $result['title'] = trim($title);
+                $result['success'] = true;
+            }
+
+            // 提取描述
+            $description = $ogData['description'] ?? $ogData['twitter:description'] ?? $ogData['twitterDescription'] ?? '';
+            if ($description) {
+                $result['description'] = trim($description);
+            }
+
+            // 提取图片
+            $posterUrl = $ogData['image'] ?? $ogData['twitter:image'] ?? $ogData['twitterImage'] ?? '';
+            if ($posterUrl) {
+                $result['poster_url'] = trim($posterUrl);
+            }
+
+            Log::info('MovieParser: OpenGraph API解析完成', ['result' => $result]);
+
+        } catch (\Exception $e) {
+            Log::error('MovieParser: OpenGraph API解析异常', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
