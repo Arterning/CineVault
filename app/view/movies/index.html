@@ -110,45 +110,45 @@
                 <?php foreach ($movies as $movie): ?>
                     <div class="bg-dark-card rounded-lg overflow-hidden border border-dark-border glow-hover transition-all duration-300">
                         <?php if (!empty($movie['poster_url'])): ?>
-                            <div class="aspect-[2/3] bg-dark-bg overflow-hidden">
+                            <div class="aspect-[3/4] bg-dark-bg overflow-hidden">
                                 <img src="<?php echo htmlspecialchars($movie['poster_url']); ?>"
                                      alt="<?php echo htmlspecialchars($movie['title']); ?>"
                                      class="w-full h-full object-cover"
-                                     onerror="this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-6xl\'>🎬</div>'">
+                                     onerror="this.parentElement.innerHTML='<div class=\'flex items-center justify-center h-full text-5xl\'>🎬</div>'">
                             </div>
                         <?php else: ?>
-                            <div class="aspect-[2/3] bg-dark-bg flex items-center justify-center text-6xl">
+                            <div class="aspect-[3/4] bg-dark-bg flex items-center justify-center text-5xl">
                                 🎬
                             </div>
                         <?php endif; ?>
 
-                        <div class="p-4">
-                            <h3 class="text-lg font-bold text-white mb-2 truncate" title="<?php echo htmlspecialchars($movie['title']); ?>">
+                        <div class="p-3">
+                            <h3 class="text-base font-bold text-white mb-1.5 truncate" title="<?php echo htmlspecialchars($movie['title']); ?>">
                                 <?php echo htmlspecialchars($movie['title']); ?>
                             </h3>
 
                             <?php if (!empty($movie['description'])): ?>
-                                <p class="text-gray-400 text-sm mb-3 line-clamp-2">
-                                    <?php echo htmlspecialchars(mb_substr($movie['description'], 0, 100)); ?>
-                                    <?php echo mb_strlen($movie['description']) > 100 ? '...' : ''; ?>
+                                <p class="text-gray-400 text-xs mb-2 line-clamp-2">
+                                    <?php echo htmlspecialchars(mb_substr($movie['description'], 0, 80)); ?>
+                                    <?php echo mb_strlen($movie['description']) > 80 ? '...' : ''; ?>
                                 </p>
                             <?php endif; ?>
 
-                            <div class="flex gap-2">
+                            <div class="flex gap-1.5">
                                 <a href="<?php echo htmlspecialchars($movie['url']); ?>"
                                    target="_blank"
                                    class="flex-1 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/50
-                                          py-2 px-3 rounded text-center text-sm font-medium transition">
+                                          py-1.5 px-2 rounded text-center text-xs font-medium transition">
                                     播放
                                 </a>
                                 <a href="/movies/<?php echo $movie['id']; ?>/edit"
                                    class="flex-1 bg-gray-700 hover:bg-gray-600 text-white
-                                          py-2 px-3 rounded text-center text-sm font-medium transition">
+                                          py-1.5 px-2 rounded text-center text-xs font-medium transition">
                                     编辑
                                 </a>
                                 <button onclick="deleteMovie(<?php echo $movie['id']; ?>)"
                                         class="bg-red-900/50 hover:bg-red-900 text-red-200 border border-red-700
-                                               py-2 px-3 rounded text-sm font-medium transition">
+                                               py-1.5 px-2 rounded text-xs font-medium transition">
                                     删除
                                 </button>
                             </div>
