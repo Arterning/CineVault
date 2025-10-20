@@ -21,12 +21,20 @@ class MovieParser
         ];
 
         try {
+            // 获取配置
+            $config = config('parser', []);
+            $proxy = $config['proxy'] ?? 'http://127.0.0.1:7890';
+            $timeout = $config['timeout'] ?? 10;
+
+            // 转换代理地址格式 (http://host:port -> tcp://host:port)
+            $proxyUrl = str_replace('http://', 'tcp://', $proxy);
+
             // 设置超时和用户代理
             $contextOptions = [
                 'http' => [
-                    'timeout' => 10,
+                    'timeout' => $timeout,
                     'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-                    'proxy' => 'tcp://127.0.0.1:7890',
+                    'proxy' => $proxyUrl,
                     'request_fulluri' => true,
                 ],
                 'ssl' => [
@@ -35,7 +43,7 @@ class MovieParser
                 ]
             ];
 
-            Log::info('MovieParser: 正在获取网页内容...', ['使用代理' => '127.0.0.1:7890']);
+            Log::info('MovieParser: 正在获取网页内容...', ['使用代理' => $proxy]);
             $context = stream_context_create($contextOptions);
             $html = @file_get_contents($url, false, $context);
 
@@ -116,12 +124,19 @@ class MovieParser
         ];
 
         try {
-            $apiUrl = 'http://localhost:8007/opengraph?url=' . urlencode($url) . '&proxy=http://127.0.0.1:7890';
+            // 获取配置
+            $config = config('parser', []);
+            $apiBaseUrl = $config['opengraph_api_url'] ?? 'http://localhost:8007/opengraph';
+            $proxy = $config['proxy'] ?? 'http://127.0.0.1:7890';
+            $apiTimeout = $config['api_timeout'] ?? 15;
+
+            // 构建API请求URL
+            $apiUrl = $apiBaseUrl . '?url=' . urlencode($url) . '&proxy=' . urlencode($proxy);
             Log::info('MovieParser: 调用OpenGraph API', ['api_url' => $apiUrl]);
 
             $contextOptions = [
                 'http' => [
-                    'timeout' => 15,
+                    'timeout' => $apiTimeout,
                     'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
                 ],
                 'ssl' => [
