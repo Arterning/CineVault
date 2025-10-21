@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批量导入电影 - 电影收藏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0e27',
+                        'dark-card': '#1a1f3a',
+                        'dark-border': '#2a2f4a',
+                        'primary': '#00d9ff',
+                        'primary-dark': '#00b8d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            min-height: 100vh;
+        }
+        .glow {
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.3),
+                        0 0 20px rgba(0, 217, 255, 0.2);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #00d9ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Header -->
+    <nav class="bg-dark-card border-b border-dark-border glow mb-8">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/movies" class="text-2xl font-bold text-gradient">CineVault</a>
+                <a href="/movies" class="text-gray-300 hover:text-primary transition">
+                    返回列表
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div class="bg-dark-card rounded-lg shadow-2xl glow p-8 border border-dark-border">
+            <h2 class="text-3xl font-bold text-white mb-6">批量导入电影</h2>
+
+            <!-- Instructions -->
+            <div class="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-lg">
+                <h3 class="text-lg font-semibold text-primary mb-2">📝 使用说明</h3>
+                <ul class="text-gray-300 text-sm space-y-1">
+                    <li>• 每行输入一个电影URL</li>
+                    <li>• 系统会自动解析每个URL并获取电影信息</li>
+                    <li>• 可以为所有导入的电影设置统一分类</li>
+                    <li>• 导入过程中会实时显示进度</li>
+                </ul>
+            </div>
+
+            <!-- Import Form -->
+            <div id="importForm">
+                <div class="space-y-6">
+                    <div>
+                        <label for="urls" class="block text-sm font-medium text-gray-300 mb-2">
+                            电影URL列表 <span class="text-red-400">*</span>
+                        </label>
+                        <textarea
+                            id="urls"
+                            rows="10"
+                            class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg
+                                   text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                                   focus:ring-2 focus:ring-primary/50 transition resize-none font-mono text-sm"
+                            placeholder="https://example.com/movie/1&#10;https://example.com/movie/2&#10;https://example.com/movie/3"
+                        ></textarea>
+                        <p class="mt-2 text-sm text-gray-400">
+                            已输入 <span id="urlCount" class="text-primary font-bold">0</span> 个URL
+                        </p>
+                    </div>
+
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-gray-300 mb-2">
+                            统一分类
+                        </label>
+                        <input
+                            type="text"
+                            id="category"
+                            class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg
+                                   text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                                   focus:ring-2 focus:ring-primary/50 transition"
+                            placeholder="例如：待看、最新、推荐等"
+                            value="未分类"
+                        >
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button
+                            id="startBtn"
+                            class="flex-1 bg-gradient-to-r from-primary to-primary-dark text-dark-bg
+                                   font-bold py-3 px-6 rounded-lg hover:opacity-90 transition
+                                   transform hover:scale-105 glow">
+                            开始导入
+                        </button>
+                        <a href="/movies"
+                           class="flex-1 bg-gray-700 hover:bg-gray-600 text-white text-center
+                                  font-bold py-3 px-6 rounded-lg transition">
+                            取消
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Section (Hidden initially) -->
+            <div id="progressSection" class="hidden mt-8">
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold text-white">导入进度</h3>
+                        <span id="overallProgress" class="text-primary font-bold">0/0</span>
+                    </div>
+                    <div class="w-full bg-dark-bg rounded-full h-4 overflow-hidden border border-dark-border">
+                        <div id="progressBar" class="progress-bar bg-gradient-to-r from-primary to-primary-dark h-full rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Current Processing -->
+                <div id="currentProcessing" class="mb-6 p-4 bg-dark-bg rounded-lg border border-primary/50">
+                    <p class="text-sm text-gray-400 mb-1">当前处理</p>
+                    <p id="currentUrl" class="text-white font-mono text-sm break-all">-</p>
+                </div>
+
+                <!-- Results List -->
+                <div class="space-y-3">
+                    <h4 class="text-md font-semibold text-white">处理结果</h4>
+                    <div id="resultsList" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Results will be added here dynamically -->
+                    </div>
+                </div>
+
+                <!-- Summary (Hidden until complete) -->
+                <div id="summary" class="hidden mt-6 p-4 bg-green-900/30 border border-green-500 rounded-lg">
+                    <h4 class="text-lg font-semibold text-green-400 mb-2">✓ 导入完成</h4>
+                    <p class="text-gray-300">
+                        成功: <span id="successCount" class="text-green-400 font-bold">0</span> 个 |
+                        失败: <span id="failCount" class="text-red-400 font-bold">0</span> 个
+                    </p>
+                    <a href="/movies" class="inline-block mt-4 bg-primary text-dark-bg px-6 py-2 rounded-lg font-bold hover:opacity-90 transition">
+                        返回电影列表
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const urlsTextarea = document.getElementById('urls');
+        const urlCountSpan = document.getElementById('urlCount');
+        const startBtn = document.getElementById('startBtn');
+        const importForm = document.getElementById('importForm');
+        const progressSection = document.getElementById('progressSection');
+        const progressBar = document.getElementById('progressBar');
+        const overallProgress = document.getElementById('overallProgress');
+        const currentUrl = document.getElementById('currentUrl');
+        const resultsList = document.getElementById('resultsList');
+        const summary = document.getElementById('summary');
+        const successCountSpan = document.getElementById('successCount');
+        const failCountSpan = document.getElementById('failCount');
+
+        // Count URLs
+        urlsTextarea.addEventListener('input', () => {
+            const urls = getUrls();
+            urlCountSpan.textContent = urls.length;
+        });
+
+        // Get URLs from textarea
+        function getUrls() {
+            const text = urlsTextarea.value.trim();
+            if (!text) return [];
+            return text.split('\n')
+                .map(url => url.trim())
+                .filter(url => url.length > 0);
+        }
+
+        // Start import
+        startBtn.addEventListener('click', async () => {
+            const urls = getUrls();
+            const category = document.getElementById('category').value.trim() || '未分类';
+
+            if (urls.length === 0) {
+                alert('请至少输入一个URL');
+                return;
+            }
+
+            // Validate URLs
+            const invalidUrls = urls.filter(url => {
+                try {
+                    new URL(url);
+                    return false;
+                } catch {
+                    return true;
+                }
+            });
+
+            if (invalidUrls.length > 0) {
+                alert(`发现 ${invalidUrls.length} 个无效的URL，请检查格式`);
+                return;
+            }
+
+            // Hide form and show progress
+            importForm.classList.add('hidden');
+            progressSection.classList.remove('hidden');
+
+            // Start processing
+            await processUrls(urls, category);
+        });
+
+        // Process URLs one by one
+        async function processUrls(urls, category) {
+            let successCount = 0;
+            let failCount = 0;
+            const total = urls.length;
+
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                const index = i + 1;
+
+                // Update current processing
+                currentUrl.textContent = url;
+                overallProgress.textContent = `${index}/${total}`;
+
+                // Add processing item to results
+                const resultItem = addResultItem(url, 'processing', index);
+
+                try {
+                    // Parse URL
+                    const parseResult = await parseUrl(url);
+
+                    if (parseResult.success) {
+                        // Save movie
+                        const saveResult = await saveMovie({
+                            url: url,
+                            title: parseResult.data.title,
+                            description: parseResult.data.description,
+                            poster_url: parseResult.data.poster_url,
+                            category: category
+                        });
+
+                        if (saveResult.success) {
+                            updateResultItem(resultItem, 'success', parseResult.data.title);
+                            successCount++;
+                        } else {
+                            updateResultItem(resultItem, 'error', saveResult.message);
+                            failCount++;
+                        }
+                    } else {
+                        updateResultItem(resultItem, 'error', parseResult.message);
+                        failCount++;
+                    }
+                } catch (error) {
+                    updateResultItem(resultItem, 'error', '网络错误');
+                    failCount++;
+                }
+
+                // Update progress bar
+                const progress = ((index) / total) * 100;
+                progressBar.style.width = progress + '%';
+
+                // Small delay between requests
+                if (i < urls.length - 1) {
+                    await sleep(500);
+                }
+            }
+
+            // Show summary
+            currentUrl.textContent = '全部完成';
+            successCountSpan.textContent = successCount;
+            failCountSpan.textContent = failCount;
+            summary.classList.remove('hidden');
+        }
+
+        // Parse URL
+        async function parseUrl(url) {
+            const formData = new FormData();
+            formData.append('url', url);
+
+            const response = await fetch('/movies/parse-url', {
+                method: 'POST',
+                body: formData
+            });
+
+            return await response.json();
+        }
+
+        // Save movie
+        async function saveMovie(data) {
+            const formData = new FormData();
+            Object.keys(data).forEach(key => {
+                formData.append(key, data[key] || '');
+            });
+
+            const response = await fetch('/movies/store', {
+                method: 'POST',
+                body: formData
+            });
+
+            return await response.json();
+        }
+
+        // Add result item
+        function addResultItem(url, status, index) {
+            const div = document.createElement('div');
+            div.className = 'p-3 rounded-lg border flex items-start gap-3';
+            div.dataset.url = url;
+
+            const icon = document.createElement('div');
+            icon.className = 'flex-shrink-0 mt-0.5';
+
+            const content = document.createElement('div');
+            content.className = 'flex-1 min-w-0';
+
+            const urlDiv = document.createElement('div');
+            urlDiv.className = 'font-mono text-sm break-all mb-1';
+
+            const statusDiv = document.createElement('div');
+            statusDiv.className = 'text-sm';
+
+            if (status === 'processing') {
+                div.className += ' bg-blue-900/20 border-blue-500';
+                icon.innerHTML = '<div class="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full"></div>';
+                urlDiv.className += ' text-blue-300';
+                urlDiv.textContent = `${index}. ${url}`;
+                statusDiv.className += ' text-blue-400';
+                statusDiv.textContent = '处理中...';
+            }
+
+            content.appendChild(urlDiv);
+            content.appendChild(statusDiv);
+            div.appendChild(icon);
+            div.appendChild(content);
+
+            resultsList.appendChild(div);
+            return div;
+        }
+
+        // Update result item
+        function updateResultItem(item, status, message) {
+            const icon = item.querySelector('div:first-child');
+            const statusDiv = item.querySelector('div:last-child > div:last-child');
+
+            if (status === 'success') {
+                item.className = 'p-3 rounded-lg border bg-green-900/20 border-green-500 flex items-start gap-3';
+                icon.innerHTML = '<svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>';
+                statusDiv.className = 'text-sm text-green-400';
+                statusDiv.textContent = `✓ 成功: ${message}`;
+            } else if (status === 'error') {
+                item.className = 'p-3 rounded-lg border bg-red-900/20 border-red-500 flex items-start gap-3';
+                icon.innerHTML = '<svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>';
+                statusDiv.className = 'text-sm text-red-400';
+                statusDiv.textContent = `✗ 失败: ${message}`;
+            }
+        }
+
+        // Sleep helper
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>

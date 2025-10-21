@@ -30,6 +30,7 @@ Route::get('/logout', [app\controller\AuthController::class, 'logout']);
 Route::group('/movies', function () {
     Route::get('', [app\controller\MovieController::class, 'index']);
     Route::get('/create', [app\controller\MovieController::class, 'create']);
+    Route::get('/batch-import', [app\controller\MovieController::class, 'batchImport']);
     Route::post('/parse-url', [app\controller\MovieController::class, 'parseUrl']);
     Route::post('/store', [app\controller\MovieController::class, 'store']);
     Route::get('/{id}/edit', [app\controller\MovieController::class, 'edit']);

@@ -52,6 +52,14 @@ class MovieController
     }
 
     /**
+     * 批量导入页面
+     */
+    public function batchImport(Request $request): Response
+    {
+        return view('movies/batch_import');
+    }
+
+    /**
      * 解析URL获取电影信息
      */
     public function parseUrl(Request $request): Response
