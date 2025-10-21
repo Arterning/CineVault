@@ -21,14 +21,21 @@ class Movie
     /**
      * 获取用户的所有电影
      */
-    public static function findByUserId(int $userId, int $page = 1, int $perPage = 20): array
+    public static function findByUserId(int $userId, int $page = 1, int $perPage = 20, ?string $category = null): array
     {
         $offset = ($page - 1) * $perPage;
 
-        $stmt = Database::connection()->prepare(
-            'SELECT * FROM movies WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
-        );
-        $stmt->execute([$userId, $perPage, $offset]);
+        if ($category) {
+            $stmt = Database::connection()->prepare(
+                'SELECT * FROM movies WHERE user_id = ? AND category = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+            );
+            $stmt->execute([$userId, $category, $perPage, $offset]);
+        } else {
+            $stmt = Database::connection()->prepare(
+                'SELECT * FROM movies WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?'
+            );
+            $stmt->execute([$userId, $perPage, $offset]);
+        }
 
         return $stmt->fetchAll();
     }
@@ -36,10 +43,15 @@ class Movie
     /**
      * 获取用户电影总数
      */
-    public static function countByUserId(int $userId): int
+    public static function countByUserId(int $userId, ?string $category = null): int
     {
-        $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM movies WHERE user_id = ?');
-        $stmt->execute([$userId]);
+        if ($category) {
+            $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM movies WHERE user_id = ? AND category = ?');
+            $stmt->execute([$userId, $category]);
+        } else {
+            $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM movies WHERE user_id = ?');
+            $stmt->execute([$userId]);
+        }
         return (int) $stmt->fetchColumn();
     }
 
@@ -66,8 +78,8 @@ class Movie
     public static function create(array $data): int
     {
         $stmt = Database::connection()->prepare(
-            'INSERT INTO movies (user_id, title, url, description, poster_url, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, datetime("now"), datetime("now"))'
+            'INSERT INTO movies (user_id, title, url, description, poster_url, category, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))'
         );
 
         $stmt->execute([
@@ -75,7 +87,8 @@ class Movie
             $data['title'],
             $data['url'],
             $data['description'] ?? null,
-            $data['poster_url'] ?? null
+            $data['poster_url'] ?? null,
+            $data['category'] ?? '未分类'
         ]);
 
         return (int) Database::connection()->lastInsertId();
@@ -90,7 +103,7 @@ class Movie
         $values = [];
 
         foreach ($data as $key => $value) {
-            if (in_array($key, ['title', 'url', 'description', 'poster_url'])) {
+            if (in_array($key, ['title', 'url', 'description', 'poster_url', 'category'])) {
                 $fields[] = "$key = ?";
                 $values[] = $value;
             }
@@ -121,5 +134,17 @@ class Movie
         $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM movies WHERE id = ? AND user_id = ?');
         $stmt->execute([$id, $userId]);
         return (int) $stmt->fetchColumn() > 0;
+    }
+
+    /**
+     * 获取用户的所有分类及其电影数量
+     */
+    public static function getCategoriesByUserId(int $userId): array
+    {
+        $stmt = Database::connection()->prepare(
+            'SELECT category, COUNT(*) as count FROM movies WHERE user_id = ? GROUP BY category ORDER BY category'
+        );
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll();
     }
 }

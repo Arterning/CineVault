@@ -132,6 +132,23 @@
                     <?php endif; ?>
                 </div>
 
+                <div>
+                    <label for="category" class="block text-sm font-medium text-gray-300 mb-2">
+                        分类
+                    </label>
+                    <input
+                        type="text"
+                        id="category"
+                        name="category"
+                        value="<?php echo htmlspecialchars($movie['category'] ?? '未分类'); ?>"
+                        class="w-full px-4 py-3 bg-dark-bg border border-dark-border rounded-lg
+                               text-white placeholder-gray-500 focus:outline-none focus:border-primary
+                               focus:ring-2 focus:ring-primary/50 transition"
+                        placeholder="例如：动作、科幻、剧情等"
+                    >
+                    <p class="mt-2 text-sm text-gray-400">可以自定义分类名称</p>
+                </div>
+
                 <div id="errorMessage" class="hidden bg-red-900/30 border border-red-500 text-red-200 px-4 py-3 rounded-lg">
                 </div>
 

@@ -17,13 +17,17 @@ class MovieController
         $userId = $request->session()->get('user_id');
         $page = max(1, (int) $request->get('page', 1));
         $search = $request->get('search', '');
+        $category = $request->get('category', '');
+
+        // 获取所有分类
+        $categories = Movie::getCategoriesByUserId($userId);
 
         if ($search) {
             $movies = Movie::search($userId, $search);
             $total = count($movies);
         } else {
-            $movies = Movie::findByUserId($userId, $page, 20);
-            $total = Movie::countByUserId($userId);
+            $movies = Movie::findByUserId($userId, $page, 20, $category ?: null);
+            $total = Movie::countByUserId($userId, $category ?: null);
         }
 
         $totalPages = ceil($total / 20);
@@ -33,7 +37,9 @@ class MovieController
             'page' => $page,
             'totalPages' => $totalPages,
             'total' => $total,
-            'search' => $search
+            'search' => $search,
+            'category' => $category,
+            'categories' => $categories
         ]);
     }
 
@@ -97,6 +103,7 @@ class MovieController
         $url = trim($request->post('url', ''));
         $description = trim($request->post('description', ''));
         $posterUrl = trim($request->post('poster_url', ''));
+        $category = trim($request->post('category', '未分类'));
 
         // 验证必填字段
         if (!$title || !$url) {
@@ -120,7 +127,8 @@ class MovieController
                 'title' => $title,
                 'url' => $url,
                 'description' => $description,
-                'poster_url' => $posterUrl
+                'poster_url' => $posterUrl,
+                'category' => $category
             ]);
 
             return json([
@@ -169,6 +177,7 @@ class MovieController
         $url = trim($request->post('url', ''));
         $description = trim($request->post('description', ''));
         $posterUrl = trim($request->post('poster_url', ''));
+        $category = trim($request->post('category', '未分类'));
 
         // 验证必填字段
         if (!$title || !$url) {
@@ -191,7 +200,8 @@ class MovieController
                 'title' => $title,
                 'url' => $url,
                 'description' => $description,
-                'poster_url' => $posterUrl
+                'poster_url' => $posterUrl,
+                'category' => $category
             ]);
 
             return json([

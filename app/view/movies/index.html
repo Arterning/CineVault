@@ -62,6 +62,34 @@
     </nav>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex gap-6">
+            <!-- Left Sidebar - Categories -->
+            <div class="w-64 flex-shrink-0">
+                <div class="bg-dark-card border border-dark-border rounded-lg p-4 sticky top-8">
+                    <h2 class="text-lg font-bold text-white mb-4">分类</h2>
+                    <div class="space-y-1">
+                        <a href="/movies"
+                           class="block px-3 py-2 rounded-lg transition <?php echo empty($category) ? 'bg-primary/20 text-primary border border-primary/50' : 'text-gray-300 hover:bg-dark-bg'; ?>">
+                            <div class="flex justify-between items-center">
+                                <span>全部</span>
+                                <span class="text-sm"><?php echo $total; ?></span>
+                            </div>
+                        </a>
+                        <?php foreach ($categories as $cat): ?>
+                            <a href="/movies?category=<?php echo urlencode($cat['category']); ?>"
+                               class="block px-3 py-2 rounded-lg transition <?php echo $category === $cat['category'] ? 'bg-primary/20 text-primary border border-primary/50' : 'text-gray-300 hover:bg-dark-bg'; ?>">
+                                <div class="flex justify-between items-center">
+                                    <span class="truncate"><?php echo htmlspecialchars($cat['category']); ?></span>
+                                    <span class="text-sm ml-2"><?php echo $cat['count']; ?></span>
+                                </div>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-1 min-w-0">
         <!-- Search and Add -->
         <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <form method="GET" class="w-full sm:w-96">
@@ -123,9 +151,16 @@
                         <?php endif; ?>
 
                         <div class="p-3">
-                            <h3 class="text-base font-bold text-white mb-1.5 truncate" title="<?php echo htmlspecialchars($movie['title']); ?>">
-                                <?php echo htmlspecialchars($movie['title']); ?>
-                            </h3>
+                            <div class="flex items-start justify-between mb-1.5 gap-2">
+                                <h3 class="text-base font-bold text-white truncate flex-1" title="<?php echo htmlspecialchars($movie['title']); ?>">
+                                    <?php echo htmlspecialchars($movie['title']); ?>
+                                </h3>
+                                <?php if (!empty($movie['category'])): ?>
+                                    <span class="text-xs px-2 py-0.5 bg-primary/20 text-primary border border-primary/50 rounded whitespace-nowrap">
+                                        <?php echo htmlspecialchars($movie['category']); ?>
+                                    </span>
+                                <?php endif; ?>
+                            </div>
 
                             <?php if (!empty($movie['description'])): ?>
                                 <p class="text-gray-400 text-xs mb-2 line-clamp-2">
@@ -160,22 +195,28 @@
             <!-- Pagination -->
             <?php if ($totalPages > 1): ?>
                 <div class="flex justify-center mt-8 gap-2">
+                    <?php
+                    $params = [];
+                    if ($search) $params[] = 'search=' . urlencode($search);
+                    if ($category) $params[] = 'category=' . urlencode($category);
+                    $queryString = $params ? '&' . implode('&', $params) : '';
+                    ?>
                     <?php if ($page > 1): ?>
-                        <a href="?page=<?php echo $page - 1; ?><?php echo $search ? '&search=' . urlencode($search) : ''; ?>"
+                        <a href="?page=<?php echo $page - 1; ?><?php echo $queryString; ?>"
                            class="px-4 py-2 bg-dark-card border border-dark-border rounded hover:border-primary transition">
                             上一页
                         </a>
                     <?php endif; ?>
 
                     <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
-                        <a href="?page=<?php echo $i; ?><?php echo $search ? '&search=' . urlencode($search) : ''; ?>"
+                        <a href="?page=<?php echo $i; ?><?php echo $queryString; ?>"
                            class="px-4 py-2 rounded <?php echo $i === $page ? 'bg-primary text-dark-bg font-bold' : 'bg-dark-card border border-dark-border hover:border-primary'; ?> transition">
                             <?php echo $i; ?>
                         </a>
                     <?php endfor; ?>
 
                     <?php if ($page < $totalPages): ?>
-                        <a href="?page=<?php echo $page + 1; ?><?php echo $search ? '&search=' . urlencode($search) : ''; ?>"
+                        <a href="?page=<?php echo $page + 1; ?><?php echo $queryString; ?>"
                            class="px-4 py-2 bg-dark-card border border-dark-border rounded hover:border-primary transition">
                             下一页
                         </a>
@@ -183,6 +224,8 @@
                 </div>
             <?php endif; ?>
         <?php endif; ?>
+            </div><!-- End Main Content -->
+        </div><!-- End Flex Container -->
     </div>
 
     <script>

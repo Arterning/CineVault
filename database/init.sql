@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS movies (
     url TEXT NOT NULL,
     description TEXT,
     poster_url TEXT,
+    category VARCHAR(100) DEFAULT '未分类',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -24,3 +25,4 @@ CREATE TABLE IF NOT EXISTS movies (
 -- 创建索引
 CREATE INDEX IF NOT EXISTS idx_movies_user_id ON movies(user_id);
 CREATE INDEX IF NOT EXISTS idx_movies_created_at ON movies(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_movies_category ON movies(category);
