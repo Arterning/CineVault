@@ -63,6 +63,7 @@
                 <h3 class="text-lg font-semibold text-primary mb-2">📝 使用说明</h3>
                 <ul class="text-gray-300 text-sm space-y-1">
                     <li>• 每行输入一个电影URL</li>
+                    <li>• 支持普通URL和Markdown链接格式: [文本](URL)</li>
                     <li>• 系统会自动解析每个URL并获取电影信息</li>
                     <li>• 可以为所有导入的电影设置统一分类</li>
                     <li>• 导入过程中会实时显示进度</li>
@@ -186,8 +187,21 @@
         function getUrls() {
             const text = urlsTextarea.value.trim();
             if (!text) return [];
+
             return text.split('\n')
-                .map(url => url.trim())
+                .map(line => {
+                    line = line.trim();
+                    if (!line) return '';
+
+                    // 匹配 Markdown 链接格式: [文本](URL)
+                    const markdownMatch = line.match(/\[.*?\]\((https?:\/\/[^\)]+)\)/);
+                    if (markdownMatch) {
+                        return markdownMatch[1];
+                    }
+
+                    // 否则返回原始内容（假设是普通URL）
+                    return line;
+                })
                 .filter(url => url.length > 0);
         }
 
