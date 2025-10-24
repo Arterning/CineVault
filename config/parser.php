@@ -4,7 +4,7 @@
  */
 return [
     // OpenGraph API 服务地址
-    'opengraph_api_url' => getenv('OPENGRAPH_API_URL') ?: 'http://localhost:8007/opengraph',
+    'opengraph_api_url' => getenv('OPENGRAPH_API_URL') ?: 'http://localhost:3000/opengraph',
 
     // HTTP 代理地址
     'proxy' => getenv('HTTP_PROXY') ?: 'http://127.0.0.1:7890',

@@ -126,7 +126,7 @@ class MovieParser
         try {
             // 获取配置
             $config = config('parser', []);
-            $apiBaseUrl = $config['opengraph_api_url'] ?? 'http://localhost:8007/opengraph';
+            $apiBaseUrl = $config['opengraph_api_url'] ?? 'http://localhost:3000/opengraph';
             $proxy = $config['proxy'] ?? 'http://127.0.0.1:7890';
             $apiTimeout = $config['api_timeout'] ?? 15;
 
