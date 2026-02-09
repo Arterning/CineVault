@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo htmlspecialchars($movie['title']); ?> - 播放</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0e27',
+                        'dark-card': '#1a1f3a',
+                        'dark-border': '#2a2f4a',
+                        'primary': '#00d9ff',
+                        'primary-dark': '#00b8d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            min-height: 100vh;
+        }
+        .glow {
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.3),
+                        0 0 20px rgba(0, 217, 255, 0.2);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #00d9ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Header -->
+    <nav class="bg-dark-card border-b border-dark-border glow mb-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/" class="text-2xl font-bold text-gradient">CineVault</a>
+                <a href="/" class="text-gray-300 hover:text-primary transition">
+                    返回首页
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+        <div class="bg-dark-card rounded-lg shadow-2xl glow p-6 border border-dark-border">
+            <!-- Movie Title -->
+            <h1 class="text-3xl font-bold text-white mb-4"><?php echo htmlspecialchars($movie['title']); ?></h1>
+            
+            <!-- Movie Info -->
+            <div class="flex flex-wrap gap-4 mb-6 text-gray-400">
+                <span class="bg-dark-bg px-3 py-1 rounded-full text-sm">
+                    <?php echo htmlspecialchars($movie['category']); ?>
+                </span>
+                <span class="bg-dark-bg px-3 py-1 rounded-full text-sm">
+                    上传时间: <?php echo htmlspecialchars($movie['created_at']); ?>
+                </span>
+            </div>
+
+            <!-- Player Container -->
+            <div class="mb-8">
+                <?php if (str_starts_with($movie['url'], '/videos/')): ?>
+                    <!-- Local Video Player -->
+                    <video class="w-full h-auto rounded-lg border border-dark-border" controls autoplay>
+                        <source src="<?php echo htmlspecialchars($movie['url']); ?>" type="video/mp4">
+                        您的浏览器不支持视频播放。
+                    </video>
+                <?php else: ?>
+                    <!-- External Video (Embed if possible) -->
+                    <div class="aspect-video bg-dark-bg rounded-lg border border-dark-border flex items-center justify-center">
+                        <?php if (str_contains($movie['url'], 'youtube.com') || str_contains($movie['url'], 'youtu.be')): ?>
+                            <!-- YouTube Embed -->
+                            <?php
+                                $youtubeId = '';
+                                if (str_contains($movie['url'], 'youtu.be')) {
+                                    $parts = explode('/', $movie['url']);
+                                    $youtubeId = end($parts);
+                                } else if (str_contains($movie['url'], 'youtube.com')) {
+                                    parse_str(parse_url($movie['url'], PHP_URL_QUERY), $params);
+                                    $youtubeId = $params['v'] ?? '';
+                                }
+                                if ($youtubeId):
+                            ?>
+                                <iframe src="https://www.youtube.com/embed/<?php echo $youtubeId; ?>" 
+                                        class="w-full h-full" frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen></iframe>
+                            <?php else: ?>
+                                <p class="text-gray-500">无法嵌入此视频，请直接访问链接</p>
+                                <a href="<?php echo htmlspecialchars($movie['url']); ?>" 
+                                   target="_blank" 
+                                   class="mt-4 text-primary hover:underline">
+                                    打开视频链接
+                                </a>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <!-- Generic External Video -->
+                            <p class="text-gray-500">点击下方链接观看视频</p>
+                            <a href="<?php echo htmlspecialchars($movie['url']); ?>" 
+                               target="_blank" 
+                               class="mt-4 text-primary hover:underline">
+                                打开视频链接
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Movie Description -->
+            <?php if ($movie['description']): ?>
+                <div class="bg-dark-bg rounded-lg p-6 border border-dark-border mb-6">
+                    <h2 class="text-xl font-bold text-white mb-4">电影简介</h2>
+                    <p class="text-gray-300 leading-relaxed">
+                        <?php echo nl2br(htmlspecialchars($movie['description'])); ?>
+                    </p>
+                </div>
+            <?php endif; ?>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-center gap-4">
+                <a href="/" 
+                   class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition">
+                    返回首页
+                </a>
+                <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] == $movie['user_id']): ?>
+                    <a href="/movies/edit/<?php echo $movie['id']; ?>" 
+                       class="bg-primary hover:bg-primary-dark text-dark-bg font-bold py-3 px-6 rounded-lg transition">
+                        编辑电影
+                    </a>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

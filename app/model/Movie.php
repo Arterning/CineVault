@@ -147,4 +147,27 @@ class Movie
         $stmt->execute([$userId]);
         return $stmt->fetchAll();
     }
+
+    /**
+     * 获取所有电影（不分用户）
+     */
+    public static function findAll(int $page = 1, int $perPage = 20): array
+    {
+        $offset = ($page - 1) * $perPage;
+        $stmt = Database::connection()->prepare(
+            'SELECT * FROM movies ORDER BY created_at DESC LIMIT ? OFFSET ?'
+        );
+        $stmt->execute([$perPage, $offset]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * 获取所有电影总数
+     */
+    public static function countAll(): int
+    {
+        $stmt = Database::connection()->prepare('SELECT COUNT(*) FROM movies');
+        $stmt->execute();
+        return (int) $stmt->fetchColumn();
+    }
 }

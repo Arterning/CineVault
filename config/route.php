@@ -14,10 +14,8 @@
 
 use Webman\Route;
 
-// 首页重定向到登录页
-Route::get('/', function () {
-    return redirect('/login');
-});
+// 首页
+Route::get('/', [app\controller\IndexController::class, 'index']);
 
 // 认证路由（无需登录）
 Route::get('/login', [app\controller\AuthController::class, 'login']);
@@ -25,6 +23,9 @@ Route::post('/login', [app\controller\AuthController::class, 'doLogin']);
 Route::get('/register', [app\controller\AuthController::class, 'register']);
 Route::post('/register', [app\controller\AuthController::class, 'doRegister']);
 Route::get('/logout', [app\controller\AuthController::class, 'logout']);
+
+// 电影播放路由（无需登录）
+Route::get('/movies/play/{id}', [app\controller\MovieController::class, 'play']);
 
 // 电影管理路由（需要登录）
 Route::group('/movies', function () {

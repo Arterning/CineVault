@@ -112,21 +112,42 @@ class MovieController
         $description = trim($request->post('description', ''));
         $posterUrl = trim($request->post('poster_url', ''));
         $category = trim($request->post('category', '未分类'));
+        $file = $request->file('video');
 
-        // 验证必填字段
-        if (!$title || !$url) {
-            return json([
-                'success' => false,
-                'message' => '电影名称和URL不能为空'
-            ]);
-        }
+        // 处理文件上传
+        if ($file) {
+            $originalName = $file['name'];
+            $fileExt = pathinfo($originalName, PATHINFO_EXTENSION);
+            $fileName = uniqid() . '.' . $fileExt;
+            $filePath = public_path() . '/videos/' . $fileName;
+            
+            if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                // 使用文件名作为电影名称
+                $title = pathinfo($originalName, PATHINFO_FILENAME);
+                // 生成视频文件的访问URL
+                $url = '/videos/' . $fileName;
+            } else {
+                return json([
+                    'success' => false,
+                    'message' => '文件上传失败'
+                ]);
+            }
+        } else {
+            // 验证必填字段
+            if (!$title || !$url) {
+                return json([
+                    'success' => false,
+                    'message' => '电影名称和URL不能为空'
+                ]);
+            }
 
-        // 验证URL格式
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return json([
-                'success' => false,
-                'message' => 'URL格式不正确'
-            ]);
+            // 验证URL格式
+            if (!filter_var($url, FILTER_VALIDATE_URL) && !str_starts_with($url, '/videos/')) {
+                return json([
+                    'success' => false,
+                    'message' => 'URL格式不正确'
+                ]);
+            }
         }
 
         try {
@@ -196,7 +217,7 @@ class MovieController
         }
 
         // 验证URL格式
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        if (!filter_var($url, FILTER_VALIDATE_URL) && !str_starts_with($url, '/videos/')) {
             return json([
                 'success' => false,
                 'message' => 'URL格式不正确'
@@ -214,7 +235,7 @@ class MovieController
 
             return json([
                 'success' => true,
-                'message' => '更新成功',
+                'message' => '电影更新成功',
                 'redirect' => '/movies'
             ]);
         } catch (\Exception $e) {
@@ -223,6 +244,20 @@ class MovieController
                 'message' => '更新失败，请稍后重试'
             ]);
         }
+    }
+
+    /**
+     * 播放电影
+     */
+    public function play(Request $request, $id): Response
+    {
+        $movie = Movie::find($id);
+
+        if (!$movie) {
+            return view('errors/404');
+        }
+
+        return view('movies/play', ['movie' => $movie]);
     }
 
     /**

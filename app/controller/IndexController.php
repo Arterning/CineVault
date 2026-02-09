@@ -3,30 +3,23 @@
 namespace app\controller;
 
 use support\Request;
+use app\model\Movie;
 
 class IndexController
 {
     public function index(Request $request)
     {
-        return <<<EOF
-<style>
-  * {
-    padding: 0;
-    margin: 0;
-  }
-  iframe {
-    border: none;
-    overflow: scroll;
-  }
-</style>
-<iframe
-  src="https://www.workerman.net/wellcome"
-  width="100%"
-  height="100%"
-  allow="clipboard-write"
-  sandbox="allow-scripts allow-same-origin allow-popups"
-></iframe>
-EOF;
+        $page = max(1, (int) $request->get('page', 1));
+        $movies = Movie::findAll($page, 20);
+        $total = Movie::countAll();
+        $totalPages = ceil($total / 20);
+
+        return view('index/index', [
+            'movies' => $movies,
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'total' => $total
+        ]);
     }
 
     public function view(Request $request)

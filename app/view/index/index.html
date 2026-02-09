@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineVault - 电影收藏系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#0a0e27',
+                        'dark-card': '#1a1f3a',
+                        'dark-border': '#2a2f4a',
+                        'primary': '#00d9ff',
+                        'primary-dark': '#00b8d4',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 100%);
+            min-height: 100vh;
+        }
+        .glow {
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.3),
+                        0 0 20px rgba(0, 217, 255, 0.2);
+        }
+        .glow-hover:hover {
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.5),
+                        0 0 30px rgba(0, 217, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #00d9ff 0%, #7c3aed 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="text-gray-100">
+    <!-- Header -->
+    <nav class="bg-dark-card border-b border-dark-border glow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-gradient">CineVault</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <?php if (isset($_SESSION['user_id'])): ?>
+                        <a href="/movies" class="text-gray-300 hover:text-primary transition">
+                            我的电影
+                        </a>
+                        <a href="/logout" class="text-gray-300 hover:text-primary transition">
+                            退出登录
+                        </a>
+                    <?php else: ?>
+                        <a href="/login" class="text-gray-300 hover:text-primary transition">
+                            登录
+                        </a>
+                        <a href="/register" class="text-gray-300 hover:text-primary transition">
+                            注册
+                        </a>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-white mb-4">发现精彩电影</h2>
+            <p class="text-gray-400 text-lg">浏览所有用户上传的电影，点击卡片即可观看</p>
+        </div>
+
+        <!-- Movie Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <?php foreach ($movies as $movie): ?>
+                <a href="/movies/play/<?php echo $movie['id']; ?>"
+                   class="bg-dark-card rounded-lg overflow-hidden border border-dark-border
+                          transition-all duration-300 glow-hover group">
+                    <div class="aspect-video bg-dark-bg flex items-center justify-center">
+                        <?php if ($movie['poster_url']): ?>
+                            <img src="<?php echo htmlspecialchars($movie['poster_url']); ?>"
+                                 alt="<?php echo htmlspecialchars($movie['title']); ?>"
+                                 class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                        <?php else: ?>
+                            <div class="text-6xl">🎬</div>
+                        <?php endif; ?>
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-semibold text-white mb-2 line-clamp-1">
+                            <?php echo htmlspecialchars($movie['title']); ?>
+                        </h3>
+                        <p class="text-gray-400 text-sm mb-3 line-clamp-2">
+                            <?php echo htmlspecialchars($movie['description'] ?? '暂无描述'); ?>
+                        </p>
+                        <div class="flex justify-between items-center text-xs text-gray-500">
+                            <span><?php echo $movie['category']; ?></span>
+                            <span><?php echo $movie['created_at']; ?></span>
+                        </div>
+                    </div>
+                </a>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Pagination -->
+        <?php if ($totalPages > 1): ?>
+            <div class="mt-12 flex justify-center">
+                <nav class="inline-flex rounded-md shadow">
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <a href="/?page=<?php echo $i; ?>"
+                           class="px-4 py-2 mx-1 rounded-md
+                                  <?php if ($i == $page): ?>
+                                      bg-primary text-dark-bg font-bold
+                                  <?php else: ?>
+                                      bg-dark-card text-gray-300 hover:bg-dark-bg
+                                  <?php endif; ?>
+                                  transition">
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                </nav>
+            </div>
+        <?php endif; ?>
+    </div>
+</body>
+</html>
