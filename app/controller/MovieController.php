@@ -275,7 +275,19 @@ class MovieController
         }
 
         try {
+            // 获取电影信息
+            $movie = Movie::find($id);
+            
+            // 删除电影记录
             Movie::delete($id, $userId);
+            
+            // 删除本地视频文件
+            if ($movie && str_starts_with($movie['url'], '/videos/')) {
+                $filePath = public_path() . $movie['url'];
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
 
             return json([
                 'success' => true,

@@ -19,5 +19,5 @@ return [
     'status_file' => runtime_path() . '/webman.status',
     'stdout_file' => runtime_path() . '/logs/stdout.log',
     'log_file' => runtime_path() . '/logs/workerman.log',
-    'max_package_size' => 10 * 1024 * 1024
+    'max_package_size' => 5000 * 1024 * 1024
 ];
