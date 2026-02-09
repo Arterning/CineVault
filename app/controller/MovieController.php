@@ -116,12 +116,12 @@ class MovieController
 
         // 处理文件上传
         if ($file) {
-            $originalName = $file['name'];
+            $originalName = $file->getUploadName();
             $fileExt = pathinfo($originalName, PATHINFO_EXTENSION);
             $fileName = uniqid() . '.' . $fileExt;
             $filePath = public_path() . '/videos/' . $fileName;
             
-            if (move_uploaded_file($file['tmp_name'], $filePath)) {
+            if ($file->move($filePath)) {
                 // 使用文件名作为电影名称
                 $title = pathinfo($originalName, PATHINFO_FILENAME);
                 // 生成视频文件的访问URL

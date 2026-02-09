@@ -83,6 +83,25 @@
 
             <!-- Movie Form -->
             <form id="movieForm" class="space-y-6" enctype="multipart/form-data">
+                <!-- JavaScript to handle file upload and auto-fill -->
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const videoInput = document.querySelector('input[name="video"]');
+                        const titleInput = document.querySelector('input[name="title"]');
+                        const urlInput = document.querySelector('input[name="url"]');
+                        
+                        if (videoInput) {
+                            videoInput.addEventListener('change', function(e) {
+                                if (e.target.files && e.target.files[0]) {
+                                    const file = e.target.files[0];
+                                    const fileName = file.name;
+                                    const title = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+                                    titleInput.value = title;
+                                }
+                            });
+                        }
+                    });
+                </script>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">
                         上传视频文件 <span class="text-gray-400">(可选)</span>
