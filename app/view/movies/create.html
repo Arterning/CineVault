@@ -89,6 +89,7 @@
                         const videoInput = document.querySelector('input[name="video"]');
                         const titleInput = document.querySelector('input[name="title"]');
                         const urlInput = document.querySelector('input[name="url"]');
+                        const form = document.querySelector('form');
                         
                         if (videoInput) {
                             videoInput.addEventListener('change', function(e) {
@@ -97,6 +98,73 @@
                                     const fileName = file.name;
                                     const title = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
                                     titleInput.value = title;
+                                }
+                            });
+                        }
+                        
+                        // Handle form submission with progress
+                        if (form) {
+                            form.addEventListener('submit', function(e) {
+                                const videoFile = videoInput.files[0];
+                                
+                                // Only use AJAX if a video file is being uploaded
+                                if (videoFile) {
+                                    e.preventDefault();
+                                    
+                                    // Create progress bar
+                                    const progressContainer = document.createElement('div');
+                                    progressContainer.className = 'mt-4';
+                                    progressContainer.innerHTML = `
+                                        <div class="w-full bg-gray-700 rounded-full h-2.5">
+                                            <div id="uploadProgress" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                                        </div>
+                                        <p id="progressText" class="mt-2 text-sm text-gray-400">上传进度: 0%</p>
+                                    `;
+                                    form.appendChild(progressContainer);
+                                    
+                                    // Create FormData
+                                    const formData = new FormData(form);
+                                    
+                                    // Create XMLHttpRequest
+                                    const xhr = new XMLHttpRequest();
+                                    
+                                    // Update progress
+                                    xhr.upload.addEventListener('progress', function(e) {
+                                        if (e.lengthComputable) {
+                                            const percentComplete = Math.round((e.loaded / e.total) * 100);
+                                            document.getElementById('uploadProgress').style.width = percentComplete + '%';
+                                            document.getElementById('progressText').textContent = `上传进度: ${percentComplete}%`;
+                                        }
+                                    });
+                                    
+                                    // Handle response
+                                    xhr.addEventListener('load', function() {
+                                        if (xhr.status === 200) {
+                                            try {
+                                                const response = JSON.parse(xhr.responseText);
+                                                if (response.success) {
+                                                    if (response.redirect) {
+                                                        window.location.href = response.redirect;
+                                                    }
+                                                } else {
+                                                    alert(response.message);
+                                                }
+                                            } catch (error) {
+                                                alert('上传成功，但解析响应失败');
+                                            }
+                                        } else {
+                                            alert('上传失败，请重试');
+                                        }
+                                    });
+                                    
+                                    // Handle error
+                                    xhr.addEventListener('error', function() {
+                                        alert('上传过程中发生错误');
+                                    });
+                                    
+                                    // Send request
+                                    xhr.open('POST', form.action);
+                                    xhr.send(formData);
                                 }
                             });
                         }
